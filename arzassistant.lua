@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('Ronny_Wright or ronnysoftware')
-script_version('25.0.3.winter1')
+script_version('1.0.1R(13.02.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
@@ -14,11 +14,11 @@ if not doesDirectoryExist(path) then
 end
 if not doesFileExist(path..'\\fontawesome-webfont.ttf') then
 	print('Скачиваю шрифт для fIcons.lua')
-	downloadUrlToFile('https://ronnysoftware.github.io/reposdata/addons/fontawesome-webfont.ttf',path..'\\fontawesome-webfont.ttf')
+	downloadUrlToFile('https://github.com/skooh32/fonts/raw/main/fontawesome-webfont.ttf',path..'\\fontawesome-webfont.ttf')
 end 
 if not doesFileExist(path..'\\azlogo160px.png') then
 	print('Скачиваю лого для скрипта')
-	downloadUrlToFile('https://ronnysoftware.github.io/reposdata/addons/azlogo160px.png',path..'\\azlogo160px.png')
+	downloadUrlToFile('https://raw.githubusercontent.com/skooh32/fonts/main/azlogo160px.png',path..'\\azlogo160px.png')
 end 
 local code_notifications = [[local imgui_notf = require 'imgui'
 local style = imgui_notf.GetStyle()
@@ -4643,7 +4643,7 @@ updates.data = {
 	status = '',
 	relevant_version = '',
 	url_update = '',
-	url_json = '' 
+	url_json = 'https://jsonbin.io/620890beca70c44b6e95cbb2' 
 }
 function updates:getlast(autoupd)
 	print('call getlast')
