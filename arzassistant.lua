@@ -4643,7 +4643,7 @@ updates.data = {
 	status = '',
 	relevant_version = '',
 	url_update = '',
-	url_json = 'https://jsonbin.io/620890beca70c44b6e95cbb2' 
+	url_json = 'https://api.jsonbin.io/b/620890beca70c44b6e95cbb2' 
 }
 function updates:getlast(autoupd)
 	print('call getlast')
