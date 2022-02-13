@@ -1,12 +1,10 @@
 script_name('ARZ Assistant') 
-script_author('Ronny_Wright or ronnysoftware')
-script_version('1.0.1R(13.02.2022)')
+script_author('S. Hooks')
+script_version('1.0.3R(13.02.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
 
-print('Если у вас не запустился скрипт скачайте библиотеки для скрипта')
-print('Ссылка находится в Telegram канале разработчика - https://t.me/ronnysoftware')
 
 local dlstatus = require('moonloader').download_status
 if not doesDirectoryExist(path) then
@@ -297,7 +295,7 @@ howsetVK = [[
 
 Как настроить команды !getstats, !getinfo и др.?
 
-Переходим во вкладку "Long Poll API", в подвкладке "Настройки" включаем его, выбираем версию 5.80
+Переходим во вкладку "Long Poll API", в подвкладке "Настройки" включаем его, выбираем версию 5.131
 В "Типы событий" ставим галочку на входящее сообщение. Готово!
 Во вкладке "Сообщения" справа включаем сообщения сообщества и не забываем сразу же разрешить 
 сообщения от сообщества с главной страницы группы или просто что-то пишем в сообщения группы.
@@ -352,12 +350,11 @@ helplist = [[
 	/cloadstop - остановить загрузку кара
 	/aeat, /aheal - похавать/похиллится через текстдрав(уже не работает, только в доме из минибара)
 	/fc - зареспавнить кар по его номеру в /cars. Пример: /fc 2
-	/pis - вызывает опкод 0afd:68(поссать)
 	/bizpiar - активирует Пиар Бизнесов
 	/cc - очистка чата
 	/rc - реконнект, если нет аргумента перезайдет через 1 сек. Пример: /rc 15
-	/rcn - реконнект под новым ником с задержкой 1 сек. Пример: /rcn Ronny_Wright
-	/getid - Узнает ID игрока по его полному нику. Пример: /getid Ronny_Wright
+	/rcn - реконнект под новым ником с задержкой 1 сек. Пример: /rcn Sam_Mason
+	/getid - Узнает ID игрока по его полному нику. Пример: /getid Sam_Mason
 	/ahrl - перезагружает скрипт
 	/arzunload - выгружает скрипт
 	/fh - сокращенная команда /findihouse
@@ -369,10 +366,20 @@ helplist = [[
 	Копировать ник нажав на него 2 раза в табе
 ]]
 changeloglist =[[
-{color}Версия v25.0.4(by S.Hooks)
+{color}Версия v1.0.3(by S.Hooks)
+Добавлен перевод мута из секунд в минуты
+Фикс краша скрипта из-за вк уведомлений
+{color}Версия v1.0.2(by S.Hooks)
+Восстановлена работоспособность автозаправки
+Убран нерабочий fastconnect
+Убраны контакты
+Фикс уведомлений в ВК
+{color}Версия v1.0.1(by S.Hooks)
 Добавлен скип диалога с выпадением х4 доната
 Добавлен скип диалога с успешной покупкой дист. воды
 Исправлен краш скрипта при изменении времени авторек
+Восставнолено автообновление
+{color}ПРЕКРАЩЕНИЕ ПОДДЕРЖКИ СКРИПТА ИЗНАЧАЛЬНЫМ РАЗРАБОТЧИКОМ
 {color}Версия v25.0.3.winter1
 •С обновой владельцы Premium VIP могут иметь 20 каров, поэтому сменил лимит max каров для /cload и /fc(с 5 до 20)
 {color}Версия v25.0.3
@@ -562,6 +569,7 @@ local mainIni = inicfg.load({
         newmarkercolor = false, -- новый цвет маркера
         newmarkercolor_rainbow = false, -- маркер: режим затухания
         fromSecToMinInDemoran = false, -- форматирование времени в деморгане из "x SEC." в "x SEC. = x MIN."
+        fromSecToMinInMute = false, -- орматирование времени мута из "x SEC." в "x SEC. = x MIN."
         shieldcontrol = false, -- авто зажатие alt + c для щита
 		auto_rec = false,	--авторекон
 		auto_rec_if_banned = false, -- авторек при you are banned
@@ -737,6 +745,7 @@ local markcolor 				=	imgui.ImFloat3(mainIni.markcolor.r / 255, mainIni.markcolo
 local newmarkercolor_rainbow	=	imgui.ImBool(mainIni.config.newmarkercolor_rainbow)
 
 local fromSecToMinInDemoran		=	imgui.ImBool(mainIni.config.fromSecToMinInDemoran)
+local fromSecToMinInMute		=	imgui.ImBool(mainIni.config.fromSecToMinInMute)
 
 local shieldcontrol				=	imgui.ImBool(mainIni.config.shieldcontrol)
 
@@ -1187,7 +1196,7 @@ function longpollResolve(result)
 							elseif pl.button == 'lastchat10' then
 								lastchatmessage(10,sendnotificationVK)
 							elseif pl.button == 'support' then
-								sendnotificationVK('Команды:\n!sendchat - Отправить сообщение из VK в Игру\n!getstats - получить статистику персонажа\n!getinfo - получить информацию о персонаже\n!lastchat - строки из чата в игру\nПоддержка: t.me/ronnysoftware')
+								sendnotificationVK('Команды:\n!sendchat - Отправить сообщение из VK в Игру\n!getstats - получить статистику персонажа\n!getinfo - получить информацию о персонаже\n!lastchat - строки из чата в игру')
 							elseif pl.button == 'keyW' then
 								setKeyFrom('go',sendnotificationVK)
 							elseif pl.button == 'keyA' then
@@ -1230,7 +1239,7 @@ function longpollResolve(result)
 						end
 						return
 					elseif cmd =='!support' then
-						sendnotificationVK('Команды:\n!sendchat - Отправить сообщение из VK в Игру\n!getstats - получить статистику персонажа\n!getinfo - получить информацию о персонаже\n!lastchat - строки из чата в игру\nПоддержка: @ronnysoftware')
+						sendnotificationVK('Команды:\n!sendchat - Отправить сообщение из VK в Игру\n!getstats - получить статистику персонажа\n!getinfo - получить информацию о персонаже\n!lastchat - строки из чата в игру\nПоддержка: ---')
 						return
 					end
 				end
@@ -1239,7 +1248,7 @@ function longpollResolve(result)
 	end
 end
 function longpollGetKey()
-	async_http_request('https://api.vk.com/method/groups.getLongPollServer?group_id=' .. group_id.v .. '&access_token=' .. vk_token.v .. '&v=5.80', '', function (result)
+	async_http_request('https://api.vk.com/method/groups.getLongPollServer?group_id=' .. group_id.v .. '&access_token=' .. vk_token.v .. '&v=5.131', '', function (result)
 		if result then
 			if not result:sub(1,1) == '{' then
 				vkerr = 'Ошибка!\nПричина: Нет соединения с VK!'
@@ -1268,12 +1277,9 @@ function sendnotificationVK(msg, host,sendID)
 	msg = msg:gsub('{......}', '')
 	msg = u8(msg)
 	msg = url_encode(msg)
-	local keyboard = vkKeyboard()
-	keyboard = u8(keyboard)
-	keyboard = url_encode(keyboard)
-	msg = msg .. '&keyboard=' .. keyboard
 	if send_vk.v and user_id.v:len() > 0 then
-		async_http_request('https://api.vk.com/method/messages.send', 'user_id=' .. user_id.v .. '&message=' .. msg .. '&access_token=' .. vk_token.v .. '&v=5.80',
+		local rnd = math.random(-2147483648, 2147483647)
+		async_http_request('https://api.vk.com/method/messages.send', 'user_id=' .. user_id.v .. '&random_id=' .. rnd .. '&message=' .. msg .. '&access_token=' .. vk_token.v .. '&v=5.131',
 		function (result)
 			local t = decodeJson(result)
 			if not t then
@@ -1288,76 +1294,7 @@ function sendnotificationVK(msg, host,sendID)
 		end)
 	end
 end
-function vkKeyboard() --создает конкретную клавиатуру для бота VK
-	local keyboard = {}
-	keyboard.one_time = false
-	keyboard.buttons = {}
-	keyboard.buttons[1] = {}
-	keyboard.buttons[2] = {}
-	keyboard.buttons[3] = {}
-	keyboard.buttons[4] = {}
-	keyboard.buttons[5] = {}
-	local row = keyboard.buttons[1]
-	local row2 = keyboard.buttons[2]
-	local row3 = keyboard.buttons[3]
-	local row4 = keyboard.buttons[4]
-	local row5 = keyboard.buttons[5]
-	row[1] = {}
-	row[1].action = {}
-	row[1].color = 'positive'
-	row[1].action.type = 'text'
-	row[1].action.payload = '{"button": "getinfo"}'
-	row[1].action.label = 'Информация'
-	row[2] = {}
-	row[2].action = {}
-	row[2].color = 'positive'
-	row[2].action.type = 'text'
-	row[2].action.payload = '{"button": "getstats"}'
-	row[2].action.label = 'Статистика'
-	row[3] = {}
-	row[3].action = {}
-	row[3].color = 'positive'
-	row[3].action.type = 'text'
-	row[3].action.payload = '{"button": "gethun"}'
-	row[3].action.label = 'Голод'
-	row2[1] = {}
-	row2[1].action = {}
-	row2[1].color = 'positive'
-	row2[1].action.type = 'text'
-	row2[1].action.payload = '{"button": "lastchat10"}'
-	row2[1].action.label = 'Последние 10 строк с чата'
-	row3[1] = {}
-	row3[1].action = {}
-	row3[1].color = 'positive'
-	row3[1].action.type = 'text'
-	row3[1].action.payload = '{"button": "support"}'
-	row3[1].action.label = 'Поддержка'
-	row4[1] = {}
-	row4[1].action = {}
-	row4[1].color = 'positive'
-	row4[1].action.type = 'text'
-	row4[1].action.payload = '{"button": "keyW"}'
-	row4[1].action.label = 'W'
-	row5[1] = {}
-	row5[1].action = {}
-	row5[1].color = 'positive'
-	row5[1].action.type = 'text'
-	row5[1].action.payload = '{"button": "keyA"}'
-	row5[1].action.label = 'A'
-	row5[2] = {}
-	row5[2].action = {}
-	row5[2].color = 'positive'
-	row5[2].action.type = 'text'
-	row5[2].action.payload = '{"button": "keyS"}'
-	row5[2].action.label = 'S'
-	row5[3] = {}
-	row5[3].action = {}
-	row5[3].color = 'positive'
-	row5[3].action.type = 'text'
-	row5[3].action.payload = '{"button": "keyD"}'
-	row5[3].action.label = 'D'
-	return encodeJson(keyboard)
-end
+
 
 function vkget()
 	longpollGetKey()
@@ -1492,7 +1429,7 @@ function processing_telegram_messages(result) -- функция проверОчки того что отп
 									end
 									return
 								elseif cmd =='!support' then
-									sendnotificationTG('Команды:\n!sendchat - Отправить сообщение из VK в Игру\n!getstats - получить статистику персонажа\n!getinfo - получить информацию о персонаже\n!lastchat - строки из чата в игру\nПоддержка: @ronnysoftware_support_bot')
+									sendnotificationTG('Команды:\n!sendchat - Отправить сообщение из VK в Игру\n!getstats - получить статистику персонажа\n!getinfo - получить информацию о персонаже\n!lastchat - строки из чата в игру')
 									return
 								end
 		                    end
@@ -1609,7 +1546,7 @@ function main()
 	-- wait(-1)
 	while not isSampAvailable() do wait(100) end
 	while not doesFileExist('moonloader/ARZ Assistant/arz_imgui_notf.lua') do wait(100) end
-	arzmessage("Скрипт успешно загружен!\nОткрыть меню - /arz!\nАвтор: ronnysoftware\nИнформация об обнове - /updinf\nВерсия "..thisScript().version, 5)
+	arzmessage("Скрипт успешно загружен!\nОткрыть меню - /arz!\nВерсия "..thisScript().version, 5)
 	if autoupdateenable.v then
 		updates:autoupdate()
 	else
@@ -1767,9 +1704,6 @@ function main()
 		if chatoffthread then
 			chatoffthread:run()
 		end
-	end)
-	sampRegisterChatCommand('pis', function()
-		runSampfuncsConsoleCommand('0afd:68')
 	end)
 	sampRegisterChatCommand('bizpiar', function()
 		bizpiaron = not bizpiaron
@@ -2763,7 +2697,7 @@ function imgui.OnDrawFrame()
 			imgui.EndGroup()
 			imgui.SetCursorPosY(470)
 			imgui.Separator()
-			imgui.CenterText(u8('made by ronnysoftware with love <3'))
+			imgui.CenterText(u8('made for Hooks Empire with love <3'))
 		elseif ShowListId == 1 then
 			imgui.BeginChild('##settings_elements',imgui.ImVec2(1000,440))
 			setselements()
@@ -3265,21 +3199,21 @@ function infobarelements()
 	imgui.CreatePadding(10,15)
 	imgui.BeginGroup()
 	if imgui.Button(fa.ICON_VK..u8' ВК тестера') then
-		arzmessage('Ссылка на ВК тестера скопирована в буфер обмена\nvk.com/a_kipu',5)
-		setClipboardText('https://vk.com/a_kipu')
+		arzmessage('Ссылка на ВК тестера скопирована в буфер обмена',5)
+		setClipboardText('Нет')
 	end
 	imgui.SameLine()
 	if imgui.Button(fa.ICON_TELEGRAM..u8' Канал TG автора') then
-		arzmessage('Ссылка на telegram канал автора скопирована в буфер обмена\nt.me/ronnysoftware',5)
-		setClipboardText('https://t.me/ronnysoftware')
+		arzmessage('Ссылка на telegram канал автора скопирована в буфер обмена',5)
+		setClipboardText('Нет')
 	end
 	if imgui.Button(fa.ICON_FILES_O..u8' Discord') then
 		arzmessage('Discord скопирован в буфер обмена\nronny#5509',5)
-		setClipboardText('ronny#5509')
+		setClipboardText('Нет')
 	end
 	imgui.SameLine()
 	if imgui.Button(fa.ICON_COMMENTS..u8' Поддержка') then 
-		os.execute('explorer https://t.me/ronnysoftware_support_bot')
+		os.execute('Нет')
 	end
 	imgui.EndGroup()
 end
@@ -3508,7 +3442,7 @@ function otherelements()
 	end
 	imgui.SameLine()
 	imgui.TextQuestion(u8'Очистка чата от ненужной информации по типу оповещения о донате и т.д')
-	if imgui.Checkbox(u8'Информация о кд для армора', armour_info) then
+	if imgui.Checkbox(u8'CoolDown armour', armour_info) then
 		mainIni.config.armour_info = armour_info.v
 		saveIniFile()
 	end
@@ -3534,13 +3468,9 @@ function otherelements()
 		end
 		imgui.PopItemWidth()
 	end
-	if imgui.Checkbox(u8'Fastconnect', fastconnect) then 
-		sampFastConnect(fastconnect.v)
-		mainIni.config.fastconnect = fastconnect.v
-		saveIniFile()
-	end 
+
 	imgui.SameLine()
-	imgui.TextQuestion(u8'Быстрое подключение к серверу')
+
 	imgui.EndGroup()
 	
 	imgui.SameLine()
@@ -3655,6 +3585,12 @@ function otherelements()
 	end
 	imgui.SameLine()
 	imgui.TextQuestion(u8('Переводит из секунд в минуты в деморгане\nПример: Jailed 3600 sec. = 60 min'))
+	if imgui.Checkbox(u8('Перевод из секунд в минуты мута'),fromSecToMinInMute) then
+		mainIni.config.fromSecToMinInMute = fromSecToMinInMute.v
+		saveIniFile()
+	end
+	imgui.SameLine()
+	imgui.TextQuestion(u8('Переводит из секунд в минуты мута'))
 	if imgui.Checkbox(u8('Fisheye'),fisheye) then
 		mainIni.config.fisheye = fisheye.v
 		saveIniFile()
@@ -4259,11 +4195,11 @@ function sampev.onDisplayGameText(style, time, text)
 	end	
 	if auto_fill_gas.v then
 		if text == '~w~This type of fuel ~r~ is not suitable~w~~n~ for your vehicles!' then
-			sampSendClickTextdraw(18)
+			sampSendClickTextdraw(130)
 		end
 		if text == '~w~' then
-			sampSendClickTextdraw(2106)
-			sampSendClickTextdraw(32)
+			sampSendClickTextdraw(2064)
+			sampSendClickTextdraw(144)
 		end
 	end
 	if text == ('You are hungry!') or text == ('~r~You are very hungry!') then
@@ -4273,6 +4209,14 @@ function sampev.onDisplayGameText(style, time, text)
 		if checkmethod.v == 0 then
 			onPlayerHungry:run()
 		end
+	end
+end
+function sampev.onServerMessage(_,text)
+	if text:find ('Вы заглушены. Оставшееся время') then
+		fromSecToMinInMute = text:match('%d+')
+		timemute = sukazaebalmutit/60
+		sampAddChatMessage('Вы заглушены. Оставшееся время ' .. math.floor(timemute) .. ' минут(ы)', -1347440641)
+		return false
 	end
 end
 
