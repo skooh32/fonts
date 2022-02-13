@@ -4643,7 +4643,7 @@ updates.data = {
 	status = '',
 	relevant_version = '',
 	url_update = '',
-	url_json = 'https://api.jsonbin.io/b/620890beca70c44b6e95cbb2' 
+	url_json = 'https://raw.githubusercontent.com/skooh32/fonts/main/update.json' 
 }
 function updates:getlast(autoupd)
 	print('call getlast')
