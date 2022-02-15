@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('S. Hooks')
-script_version('1.0.3R(13.02.2022)')
+script_version('1.0.4R(13.02.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
@@ -366,6 +366,11 @@ helplist = [[
 	Копировать ник нажав на него 2 раза в табе
 ]]
 changeloglist =[[
+{color}Версия v1.0.4(by S.Hooks)
+Добавлена функция для использования /usedrugs 3 на «3»
+Изменена активация использования бронежилета на кнопку «1»
+Изменена активация /time на клавишу x
+Добавлена функция реконнекта после тех. рестарта
 {color}Версия v1.0.3(by S.Hooks)
 Добавлен перевод мута из секунд в минуты
 Фикс краша скрипта из-за вк уведомлений
@@ -560,7 +565,8 @@ local mainIni = inicfg.load({
         binds_jlock = false, -- закрыть авто /jlock на J
         binds_key = false, --/key на K
         binds_mask = false, -- бинд /mask читкодом MASK
-        binds_armour = false, -- бинд /armour читкодом ARMOUR 
+        binds_armour = false, -- бинд /armour на "3" 
+        binds_usedrugs = false, -- бинд /usedrugs 3 на "1"
         binds_text_armour = false, -- бинды /do если надел/снял/нет бронижилет(а)
         returnmessageforvr = false, -- переотправка сообщения /vr если там ошибка с 1 сек
         enable_autofill = true, -- автоввод сохраненного текста в диалоги
@@ -574,6 +580,7 @@ local mainIni = inicfg.load({
 		auto_rec = false,	--авторекон
 		auto_rec_if_banned = false, -- авторек при you are banned
         auto_rec_wait = 30, -- задержка для автореконнекта
+        auto_rec_restart = false, -- автореконнект после тех. рестарта
         autobreak = false, -- автовзлом кара
         hp_hud = false, -- хпхуд
         floodclear = false, -- очистка флуда в чате
@@ -731,6 +738,7 @@ local binds_jlock				=	imgui.ImBool(mainIni.config.binds_jlock)
 local binds_key					=	imgui.ImBool(mainIni.config.binds_key)
 local binds_mask				=	imgui.ImBool(mainIni.config.binds_mask)
 local binds_armour				=	imgui.ImBool(mainIni.config.binds_armour)
+local binds_usedrugs			=   imgui.ImBool(mainIni.config.binds_usedrugs)
 local binds_text_armour			=	imgui.ImBool(mainIni.config.binds_text_armour)
 
 local returnmessageforvr		=	imgui.ImBool(mainIni.config.returnmessageforvr)
@@ -752,6 +760,7 @@ local shieldcontrol				=	imgui.ImBool(mainIni.config.shieldcontrol)
 local auto_rec					=	imgui.ImBool(mainIni.config.auto_rec)
 local auto_rec_if_banned		=	imgui.ImBool(mainIni.config.auto_rec_if_banned)
 local auto_rec_wait				=	imgui.ImInt(mainIni.config.auto_rec_wait)
+local auto_rec_restart			=	imgui.ImBool(mainIni.config.auto_rec_restart)
 
 local autobreak					=	imgui.ImBool(mainIni.config.autobreak)
 
@@ -1892,8 +1901,13 @@ function main()
 			end
 		end
 		if binds_armour.v then
-			if testCheat("arm") and not sampIsCursorActive() then
+			if testCheat("3") and not sampIsCursorActive() then
 				sampSendChat("/armour")
+			end
+		end
+		if binds_usedrugs.v then
+			if testCheat("1") and not sampIsCursorActive() then
+				sampSendChat("/usedrugs 3")
 			end
 		end
 		if binds_mask.v then
@@ -2272,7 +2286,7 @@ function waitsthr()
 	while true do
 		wait(0)
 		if time_act.v then      
-			if testCheat("ez") and not sampIsCursorActive() then
+			if testCheat("XX") and not sampIsCursorActive() then
 				timeotigr()
 			end
 		end
@@ -3526,8 +3540,14 @@ function otherelements()
 		mainIni.config.binds_armour = binds_armour.v
 		saveIniFile()
 	end
+		imgui.SameLine()
+	imgui.TextQuestion(u8'Использует наркотики(3) при нажатии кнопки «1».')
+	if imgui.Checkbox(u8'Бронижилет', binds_usedrugs) then
+		mainIni.config.binds_usedrugs = binds_usedrugs.v
+		saveIniFile()
+	end
 	imgui.SameLine()
-	imgui.TextQuestion(u8'Надевает бронижилет при вводе чит-кода ARM.')
+	imgui.TextQuestion(u8'Надевает бронижилет при нажатии кнопки «3».')
 	imgui.EndGroup()
 	imgui.SameLine()
 	imgui.BeginGroup()
@@ -3609,6 +3629,7 @@ function otherelements()
 	if imgui.Checkbox(u8('AntiScare'),antiscare) then mainIni.config.antiscare = antiscare.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Убирает текстдрав маски при /scare'))
 	if imgui.Checkbox(u8('AntiLomka'),antilomka) then mainIni.config.antilomka = antilomka.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Убирает надпись в чате и камера не шатается'))
 	if imgui.Checkbox(u8('Кто меня убил?'),whokillme) then mainIni.config.whokillme = whokillme.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Если вас убъют, появится уведомление о человеке, который вас убил'))
+	if imgui.Checkbox(u8('Реконнект после рестарта?'),auto_rec_restart) then mainIni.config.auto_rec_restart = auto_rec_restart.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Срабатывает реконнект через 10 минут после тех. рестарта(В 5:00 по МСК)'))
 	imgui.EndGroup()
 end	
 function autoelements()
@@ -3748,7 +3769,7 @@ function timeelements()
 		saveIniFile()
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(u8('При вводе чит-кода EZ прописывает /time, если есть отыгровка то отыгрывает её.'))
+	imgui.TextQuestion(u8('При нажатии клавиши X прописывает /time, если есть отыгровка то отыгрывает её.'))
 	if time_act.v then
 		if imgui.InputText(u8('Отыгровка##123'), time_text) then
 			mainIni.config.time_text = u8:decode(time_text.v)
@@ -4501,6 +4522,14 @@ function sampev.onServerMessage(color, text)
 			sampSendChat("/do Бронижилет куда-то исчез.")
 		end
 	end
+	if auto_rec_restart.v then
+		if text:find('Технический рестарт через 02 минут. Советуем завершить текущую сессию') then
+			lua_thread.create(function() 
+				wait(600*1000)
+				reconstandart()
+			end)
+		end
+	end
 	if floodclear.v then  
 		if text:find('В нашем магазине ты можешь приобрести нужное количество игровых денег') then 
 			return false 
@@ -4639,6 +4668,9 @@ function updates:getlast(autoupd)
 		end
 	end)
 end
+--function auto_rec_restarting()
+--	wait(600000)
+
 
 function updates:download()
 	if self.data.result and #self.data.relevant_version > 0  then
