@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('S. Hooks')
-script_version('1.0.4R(16.02.2022)')
+script_version('1.0.4R(15.02.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
@@ -1901,12 +1901,12 @@ function main()
 			end
 		end
 		if binds_armour.v then
-			if testCheat("1") and not sampIsCursorActive() then
+			if testCheat("3") and not sampIsCursorActive() then
 				sampSendChat("/armour")
 			end
 		end
 		if binds_usedrugs.v then
-			if testCheat("3") and not sampIsCursorActive() then
+			if testCheat("1") and not sampIsCursorActive() then
 				sampSendChat("/usedrugs 3")
 			end
 		end
@@ -3541,13 +3541,13 @@ function otherelements()
 		saveIniFile()
 	end
 		imgui.SameLine()
-	imgui.TextQuestion(u8'Использует наркотики(3) при нажатии кнопки «1».')
+	imgui.TextQuestion(u8'Надевает бронежилет при нажатии кнопки «3».')
 	if imgui.Checkbox(u8'Наркотики', binds_usedrugs) then
 		mainIni.config.binds_usedrugs = binds_usedrugs.v
 		saveIniFile()
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(u8'Надевает бронежилет при нажатии кнопки «3».')
+	imgui.TextQuestion(u8'Использует наркотики(3) при нажатии кнопки «1».')
 	imgui.EndGroup()
 	imgui.SameLine()
 	imgui.BeginGroup()
