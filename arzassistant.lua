@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('S. Hooks')
-script_version('1.0.4R(15.02.2022)')
+script_version('1.0.4R(16.02.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
@@ -367,9 +367,9 @@ helplist = [[
 ]]
 changeloglist =[[
 {color}Версия v1.0.4(by S.Hooks)
-Добавлена функция для использования /usedrugs 3 на «3»
-Изменена активация использования бронежилета на кнопку «1»
-Изменена активация /time на клавишу x
+Добавлена функция для использования /usedrugs 3 на «1»
+Изменена активация использования бронежилета на кнопку «3»
+Изменена активация /time при вводе чит-кода "XX"
 Добавлена функция реконнекта после тех. рестарта
 {color}Версия v1.0.3(by S.Hooks)
 Добавлен перевод мута из секунд в минуты
@@ -552,7 +552,7 @@ local mainIni = inicfg.load({
         fastrun_act = false, --быстрый бег
         fastrun_keys = encodeJson({0x72}), -- активация быстрого бега
         render_cardoors_state = false, -- рендер состояния дверей
-        armour_info = false, -- Таймер Брони
+        armour_info = false, -- Таймер броне
         mask_timer = false, -- таймер маски
         infrun = false, -- бесконечный бег 
         fastconnect = false, -- фастконнект
@@ -567,7 +567,7 @@ local mainIni = inicfg.load({
         binds_mask = false, -- бинд /mask читкодом MASK
         binds_armour = false, -- бинд /armour на "3" 
         binds_usedrugs = false, -- бинд /usedrugs 3 на "1"
-        binds_text_armour = false, -- бинды /do если надел/снял/нет бронижилет(а)
+        binds_text_armour = false, -- бинды /do если надел/снял/нет бронежилет(а)
         returnmessageforvr = false, -- переотправка сообщения /vr если там ошибка с 1 сек
         enable_autofill = true, -- автоввод сохраненного текста в диалоги
         fisheye = false, -- рыбий глаз
@@ -1901,12 +1901,12 @@ function main()
 			end
 		end
 		if binds_armour.v then
-			if testCheat("3") and not sampIsCursorActive() then
+			if testCheat("1") and not sampIsCursorActive() then
 				sampSendChat("/armour")
 			end
 		end
 		if binds_usedrugs.v then
-			if testCheat("1") and not sampIsCursorActive() then
+			if testCheat("3") and not sampIsCursorActive() then
 				sampSendChat("/usedrugs 3")
 			end
 		end
@@ -2409,7 +2409,7 @@ function renderthr()
 					renderDrawBox(datarender.box_arm.pos.x, datarender.box_arm.pos.y, datarender.box_arm.size.x, datarender.box_arm.size.y, 0x90000000)
 					renderFontDrawText(font3,'Use Arm: '..60 - (os.time() - timekd), datarender.text_arm.pos.x, datarender.text_arm.pos.y, 0xFFFFFFFF, 0x90000000)
 				else
-					arzmessage('Вы можете снова использовать бронижилет!')
+					arzmessage('Вы можете снова использовать бронежилет!')
 					timekd = 0
 					armkd = false
 				end
@@ -3536,27 +3536,27 @@ function otherelements()
 	end
 	imgui.SameLine()
 	imgui.TextQuestion(u8'Надевает маску при вводе чит-кода MASK.')
-	if imgui.Checkbox(u8'Бронижилет', binds_armour) then
+	if imgui.Checkbox(u8'Бронежилет', binds_armour) then
 		mainIni.config.binds_armour = binds_armour.v
 		saveIniFile()
 	end
 		imgui.SameLine()
 	imgui.TextQuestion(u8'Использует наркотики(3) при нажатии кнопки «1».')
-	if imgui.Checkbox(u8'Бронижилет', binds_usedrugs) then
+	if imgui.Checkbox(u8'Наркотики', binds_usedrugs) then
 		mainIni.config.binds_usedrugs = binds_usedrugs.v
 		saveIniFile()
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(u8'Надевает бронижилет при нажатии кнопки «3».')
+	imgui.TextQuestion(u8'Надевает бронежилет при нажатии кнопки «3».')
 	imgui.EndGroup()
 	imgui.SameLine()
 	imgui.BeginGroup()
-	if imgui.Checkbox(u8'Отыгровка бронижилета', binds_text_armour) then
+	if imgui.Checkbox(u8'Отыгровка бронежилета', binds_text_armour) then
 		mainIni.config.binds_text_armour = binds_text_armour.v
 		saveIniFile()
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(u8'Если вы наденете/снимите бронижилет, отправится отыгровка в /do.')
+	imgui.TextQuestion(u8'Если вы наденете/снимите бронежилет, отправится отыгровка в /do.')
 	if imgui.Checkbox(u8'Рендер 3D о состоянии дверей авто', render_cardoors_state) then
 		mainIni.config.render_cardoors_state = render_cardoors_state.v
 		saveIniFile()
@@ -3769,7 +3769,7 @@ function timeelements()
 		saveIniFile()
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(u8('При нажатии клавиши X прописывает /time, если есть отыгровка то отыгрывает её.'))
+	imgui.TextQuestion(u8('При вводе чит-кода XX прописывает /time, если есть отыгровка то отыгрывает её.'))
 	if time_act.v then
 		if imgui.InputText(u8('Отыгровка##123'), time_text) then
 			mainIni.config.time_text = u8:decode(time_text.v)
@@ -4514,12 +4514,12 @@ function sampev.onServerMessage(color, text)
 			armkd = true
 		end
 		if binds_text_armour.v then
-			sampSendChat("/do Достал из запасов бронижилет и надел его.")
+			sampSendChat("/do Достал из запасов бронежилет и надел его.")
 		end
 	end
 	if binds_text_armour.v then
 		if text:find('Вы сняли') and text:find('бронежилет!') then
-			sampSendChat("/do Бронижилет куда-то исчез.")
+			sampSendChat("/do бронежилет куда-то исчез.")
 		end
 	end
 	if auto_rec_restart.v then
@@ -4668,10 +4668,6 @@ function updates:getlast(autoupd)
 		end
 	end)
 end
---function auto_rec_restarting()
---	wait(600000)
-
-
 function updates:download()
 	if self.data.result and #self.data.relevant_version > 0  then
 		if self.data.relevant_version ~= thisScript().version then
