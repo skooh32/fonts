@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('S. Hooks')
-script_version('1.0.4R(15.02.2022)')
+script_version('1.0.5R(23.02.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
@@ -350,7 +350,7 @@ helplist = [[
 	/cloadstop - остановить загрузку кара
 	/aeat, /aheal - похавать/похиллится через текстдрав(уже не работает, только в доме из минибара)
 	/fc - зареспавнить кар по его номеру в /cars. Пример: /fc 2
-	/bizpiar - активирует Пиар Бизнесов
+	/piar - активирует Пиар
 	/cc - очистка чата
 	/rc - реконнект, если нет аргумента перезайдет через 1 сек. Пример: /rc 15
 	/rcn - реконнект под новым ником с задержкой 1 сек. Пример: /rcn Sam_Mason
@@ -366,6 +366,10 @@ helplist = [[
 	Копировать ник нажав на него 2 раза в табе
 ]]
 changeloglist =[[
+{color}Версия v1.0.5(by S.Hooks)
+Изменена команда /bizpiar на /piar
+Добавлен элемент рандома при реконнекте после рестарта(до 3 минут)
+Добавлен скип диалога x4 payday/обновлении при входе на сервер
 {color}Версия v1.0.4(by S.Hooks)
 Добавлена функция для использования /usedrugs 3 на «1»
 Изменена активация использования бронежилета на кнопку «3»
@@ -587,7 +591,8 @@ local mainIni = inicfg.load({
         inputhelper = false, -- inputhelper
         bhop = false, -- bunnyhop
         antiblockplayer = false, -- легко выйти из чела в больке
-        whokillme = false -- кто убил меня
+        whokillme = false, -- кто убил меня
+        separatormoney = false -- разделение денег точками
 	},
 	info = {
 		date = '0',
@@ -633,8 +638,8 @@ local mainIni = inicfg.load({
         state_skips = false,
         tradedialog = false,
         admin_report = false,
-        pizza = false,
-        dmzz = false,
+        distvoda = false,
+        obnovlen = false,
         taxes = false,
         military_base = false,
         pin_code = false
@@ -775,6 +780,7 @@ local bhop						=	imgui.ImBool(mainIni.config.bhop)
 local antiblockplayer			=	imgui.ImBool(mainIni.config.antiblockplayer)
 
 local whokillme					=	imgui.ImBool(mainIni.config.whokillme)
+local separatormoney			=	imgui.ImBool(mainIni.config.separatormoney)
 
 --автоеда, секция [eat]
 local checkmethod				= 	imgui.ImInt(mainIni.eat.checkmethod)
@@ -812,8 +818,8 @@ local if_damage 				= 	imgui.ImBool(mainIni.notifications.if_damage)
 local state_skips 				=	imgui.ImBool(mainIni.skipdialogs.state_skips)		
 local tradedialog 				=	imgui.ImBool(mainIni.skipdialogs.tradedialog)		
 local admin_report 				=	imgui.ImBool(mainIni.skipdialogs.admin_report)		
-local pizza 					=	imgui.ImBool(mainIni.skipdialogs.pizza)
-local dmzz 						=	imgui.ImBool(mainIni.skipdialogs.dmzz)
+local distvoda 					=	imgui.ImBool(mainIni.skipdialogs.distvoda)
+local obnovlen 					=	imgui.ImBool(mainIni.skipdialogs.obnovlen)
 local taxes 					=	imgui.ImBool(mainIni.skipdialogs.taxes)
 local military_base				=	imgui.ImBool(mainIni.skipdialogs.military_base)
 local pin_code 					=	imgui.ImBool(mainIni.skipdialogs.pin_code)
@@ -1714,7 +1720,7 @@ function main()
 			chatoffthread:run()
 		end
 	end)
-	sampRegisterChatCommand('bizpiar', function()
+	sampRegisterChatCommand('piar', function()
 		bizpiaron = not bizpiaron
 		arzmessage(bizpiaron and 'Пиар включён!' or 'Пиар выключен!',5)
 		if bizpiaron then 
@@ -3540,7 +3546,7 @@ function otherelements()
 		mainIni.config.binds_armour = binds_armour.v
 		saveIniFile()
 	end
-		imgui.SameLine()
+	imgui.SameLine()
 	imgui.TextQuestion(u8'Надевает бронежилет при нажатии кнопки «3».')
 	if imgui.Checkbox(u8'Наркотики', binds_usedrugs) then
 		mainIni.config.binds_usedrugs = binds_usedrugs.v
@@ -3630,6 +3636,7 @@ function otherelements()
 	if imgui.Checkbox(u8('AntiLomka'),antilomka) then mainIni.config.antilomka = antilomka.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Убирает надпись в чате и камера не шатается'))
 	if imgui.Checkbox(u8('Кто меня убил?'),whokillme) then mainIni.config.whokillme = whokillme.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Если вас убъют, появится уведомление о человеке, который вас убил'))
 	if imgui.Checkbox(u8('Реконнект после рестарта?'),auto_rec_restart) then mainIni.config.auto_rec_restart = auto_rec_restart.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Срабатывает реконнект через 10 минут после тех. рестарта(В 5:00 по МСК)'))
+	--if imgui.Checkbox(u8('Разделение денег'),separatormoney) then mainIni.config.separatormoney = separatormoney.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Разделяет деньги точками'))
 	imgui.EndGroup()
 end	
 function autoelements()
@@ -3691,7 +3698,7 @@ function piarelements()
 	imgui.Separator()
 	imgui.CenterText(u8'Пиар бизнеса')
 	imgui.SameLine()
-	imgui.TextQuestion(u8'Пиар ваших бизнесов. Введите в одну из строчек куда хотите пиарить и что пиарить. Например: /vr (и ваш текст пиара). Активация: /bizpiar')	
+	imgui.TextQuestion(u8'Пиар ваших бизнесов. Введите в одну из строчек куда хотите пиарить и что пиарить. Например: /vr (и ваш текст пиара). Активация: /piar')	
 	imgui.Separator()
 	imgui.CreatePaddingX(10)
 	imgui.BeginGroup()
@@ -3973,12 +3980,12 @@ function skipdialogselements()
 			mainIni.skipdialogs.tradedialog = tradedialog.v
 			saveIniFile()
 		end
-		if imgui.Checkbox(u8'Скипать диалог с покупкой дист. воды',pizza) then
-			mainIni.skipdialogs.pizza = pizza.v
+		if imgui.Checkbox(u8'Скипать диалог с покупкой дист. воды',distvoda) then
+			mainIni.skipdialogs.distvoda = distvoda.v
 			saveIniFile()
 		end
-		if imgui.Checkbox(u8'Скипать диалог с ДМЗЗ',dmzz) then
-			mainIni.skipdialogs.dmzz = dmzz.v
+		if imgui.Checkbox(u8'Скипать диалог при с акциями при входе в игру',obnovlen) then
+			mainIni.skipdialogs.obnovlen = obnovlen.v
 			saveIniFile()
 		end
 		if imgui.Checkbox(u8'Скипать диалог налоговой',taxes) then
@@ -4372,14 +4379,14 @@ function sampev.onShowDialog(dialogId, dialogStyle, dialogTitle, okButtonText, c
 				return false
 			end
 		end
-		if pizza.v then
+		if distvoda.v then
 			if dialogText:find('Вы успешно купили') then
 				sampSendDialogResponse(id,0,0,'')			
 				return false								
 			end					
 		end
-		if dmzz.v then
-			if dialogText:find('этом месте запрещено') then
+		if obnovlen.v then
+			if dialogText:find('Сейчас на сервере проходит акция') then
 				sampSendDialogResponse(id,0,0,'')
 				return false
 			end
@@ -4525,7 +4532,7 @@ function sampev.onServerMessage(color, text)
 	if auto_rec_restart.v then
 		if text:find('Технический рестарт через 02 минут. Советуем завершить текущую сессию') then
 			lua_thread.create(function() 
-				wait(600*1000)
+				wait(600*1000+random(180000))
 				reconstandart()
 			end)
 		end
