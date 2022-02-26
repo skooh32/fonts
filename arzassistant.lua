@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('S. Hooks')
-script_version('1.0.5R(23.02.2022)')
+script_version('1.0.5R(23.02.2022)(fix)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
@@ -4532,7 +4532,7 @@ function sampev.onServerMessage(color, text)
 	if auto_rec_restart.v then
 		if text:find('Технический рестарт через 02 минут. Советуем завершить текущую сессию') then
 			lua_thread.create(function() 
-				wait(600*1000+random(180000))
+				wait(600 * 1000 + math.random(300000))
 				reconstandart()
 			end)
 		end
