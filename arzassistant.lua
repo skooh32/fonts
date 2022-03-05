@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('S. Hooks')
-script_version('1.0.5R(23.02.2022)(fix)')
+script_version('1.0.6R(05.03.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
@@ -366,6 +366,10 @@ helplist = [[
 	Копировать ник нажав на него 2 раза в табе
 ]]
 changeloglist =[[
+{color}Версия v1.0.6(by S.Hooks)
+Чит-код для использования маски сокращен до "MSK"
+Исправлена работа инвентаря после скипа диалога о обновлении(скипается через 5 сек после входа)
+Обновлен скип диалога с покупкой дист.воды. Теперь скипается оба диалога
 {color}Версия v1.0.5(by S.Hooks)
 Изменена команда /bizpiar на /piar
 Добавлен элемент рандома при реконнекте после рестарта(до 3 минут)
@@ -568,7 +572,7 @@ local mainIni = inicfg.load({
         binds_olock = false, -- закрыть авто /olock на O
         binds_jlock = false, -- закрыть авто /jlock на J
         binds_key = false, --/key на K
-        binds_mask = false, -- бинд /mask читкодом MASK
+        binds_mask = false, -- бинд /mask читкодом MSK
         binds_armour = false, -- бинд /armour на "3" 
         binds_usedrugs = false, -- бинд /usedrugs 3 на "1"
         binds_text_armour = false, -- бинды /do если надел/снял/нет бронежилет(а)
@@ -592,7 +596,7 @@ local mainIni = inicfg.load({
         bhop = false, -- bunnyhop
         antiblockplayer = false, -- легко выйти из чела в больке
         whokillme = false, -- кто убил меня
-        separatormoney = false -- разделение денег точками
+        separatormoney = false, -- разделение денег точками
 	},
 	info = {
 		date = '0',
@@ -1148,6 +1152,11 @@ arz_servers = {
     ['185.169.134.172:7777'] 	= 'Arizona Kingman'
 }
 
+local function closeDialog()
+	sampSetDialogClientside(true)
+	sampCloseCurrentDialogWithButton(0)
+	sampSetDialogClientside(false)
+end
 -- web notf
 
 
@@ -1917,7 +1926,7 @@ function main()
 			end
 		end
 		if binds_mask.v then
-			if testCheat("mask") and not sampIsCursorActive() then
+			if testCheat("msk") and not sampIsCursorActive() then
 				sampSendChat("/mask")
 			end
 		end
@@ -3380,7 +3389,8 @@ function piemenuelements()
 end
 function setselements()
 	otherelements()
-	autoeatelements() 
+	autoeatelements()
+	--timenweatherelements() 
 	vipelements()
 	lovlyaelements()
 	assistantelements()
@@ -3541,7 +3551,7 @@ function otherelements()
 		saveIniFile()
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(u8'Надевает маску при вводе чит-кода MASK.')
+	imgui.TextQuestion(u8'Надевает маску при вводе чит-кода MSK.')
 	if imgui.Checkbox(u8'Бронежилет', binds_armour) then
 		mainIni.config.binds_armour = binds_armour.v
 		saveIniFile()
@@ -3636,7 +3646,7 @@ function otherelements()
 	if imgui.Checkbox(u8('AntiLomka'),antilomka) then mainIni.config.antilomka = antilomka.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Убирает надпись в чате и камера не шатается'))
 	if imgui.Checkbox(u8('Кто меня убил?'),whokillme) then mainIni.config.whokillme = whokillme.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Если вас убъют, появится уведомление о человеке, который вас убил'))
 	if imgui.Checkbox(u8('Реконнект после рестарта?'),auto_rec_restart) then mainIni.config.auto_rec_restart = auto_rec_restart.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Срабатывает реконнект через 10 минут после тех. рестарта(В 5:00 по МСК)'))
-	--if imgui.Checkbox(u8('Разделение денег'),separatormoney) then mainIni.config.separatormoney = separatormoney.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Разделяет деньги точками'))
+	if imgui.Checkbox(u8('Разделение денег'),separatormoney) then mainIni.config.separatormoney = separatormoney.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Разделяет деньги точками'))
 	imgui.EndGroup()
 end	
 function autoelements()
@@ -4375,20 +4385,35 @@ function sampev.onShowDialog(dialogId, dialogStyle, dialogTitle, okButtonText, c
 	if state_skips.v then
 		if tradedialog.v then
 			if dialogText:find('Удача! При использовании сундука с рулеткой')  then
-				sampSendDialogResponse(id,0,0,'')
-				return false
+		    	lua_thread.create(function()
+		    		wait(500)
+					sampSendDialogResponse(sampGetCurrentDialogId(), 0, -1, -1)
+					closeDialog()
+				end)
 			end
 		end
 		if distvoda.v then
 			if dialogText:find('Вы успешно купили') then
-				sampSendDialogResponse(id,0,0,'')			
-				return false								
-			end					
+		    	lua_thread.create(function()
+		    		wait(0)
+					sampSendDialogResponse(sampGetCurrentDialogId(), 0, -1, -1)
+					closeDialog()
+				end)							
+			end
+			if dialogText:find('Нужна для крафта охлаждающей жидкости,') then
+		    	lua_thread.create(function()
+		    		wait(0)
+					sampSendDialogResponse(sampGetCurrentDialogId(), 1, -1, -1)
+				end)
+			end								
 		end
 		if obnovlen.v then
-			if dialogText:find('Сейчас на сервере проходит акция') then
-				sampSendDialogResponse(id,0,0,'')
-				return false
+		    if dialogText:find('Мы рады видеть вас на проекте') then
+		    	lua_thread.create(function()
+		    		wait(5000)
+					sampSendDialogResponse(sampGetCurrentDialogId(), 1, -1, -1)
+					closeDialog()
+				end)
 			end
 		end
 		if taxes.v then
