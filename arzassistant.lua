@@ -1,6 +1,6 @@
 script_name('ARZ Assistant') 
 script_author('S. Hooks')
-script_version('1.0.6R(05.03.2022)')
+script_version('1.0.6R(06.03.2022)')
 script_properties('work-pause')
 --path script folder
 local path = getWorkingDirectory() .. "\\ARZ Assistant"
