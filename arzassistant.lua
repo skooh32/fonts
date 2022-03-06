@@ -346,8 +346,6 @@ helplist = [[
 	/nid - модифицированный /id. Пример: /nid Ronny
 	/de, m4, sh, rf - быстро достать ган из инвентаря(ган должен быть на 1 странице инвентаря)
 	/stoprec - остановить reconnect и autoreconnct
-	/cload - загрузить кар по его номеру в /cars. Пример: /cload 2
-	/cloadstop - остановить загрузку кара
 	/aeat, /aheal - похавать/похиллится через текстдрав(уже не работает, только в доме из минибара)
 	/fc - зареспавнить кар по его номеру в /cars. Пример: /fc 2
 	/piar - активирует Пиар
@@ -367,9 +365,16 @@ helplist = [[
 ]]
 changeloglist =[[
 {color}Версия v1.0.6(by S.Hooks)
+Фикс авто-заправки(спасибо разработчикам аризоны)
 Чит-код для использования маски сокращен до "MSK"
 Исправлена работа инвентаря после скипа диалога о обновлении(скипается через 5 сек после входа)
+Исправлена работа переотправки сообщения /vr
 Обновлен скип диалога с покупкой дист.воды. Теперь скипается оба диалога
+Добавлен скип диалога покупки conecpt ларцов(автопокупка, нужно нажимать только ALT)
+Убраны приветствие и поздравления в вип/семейный чат
+Убран RPDM
+Убрано название скрипта из ARZ assistant information
+Убран реконнект в /arz(через команду так же доступен)
 {color}Версия v1.0.5(by S.Hooks)
 Изменена команда /bizpiar на /piar
 Добавлен элемент рандома при реконнекте после рестарта(до 3 минут)
@@ -545,16 +550,8 @@ local mainIni = inicfg.load({
         sms_vr_prem = '', -- сообщение при покупке премиум
         time_act = false, -- врубить отыгровку часов
         time_text = '', -- текст отыгровки
-        message_catch_state = false, -- врубить сообщение после ловли
-        message_catch = '', -- сообщение после ловли
-        fam_messages = false, -- отправлять сообщения при инвайте|получении нового уровня в семье
-        fam_invite = '', -- сообщение при инвайте в фаму
-        fam_lvlup = '', -- сообщение при получении нового уровня в семье
         accent_state = false, -- активация акцента 
         accent_text = '', -- текст акцента
-        rpdm_act = false, -- rpdm
-        rpdm_text = '', -- текст RPDM
-        rpdm_keys = encodeJson({0x5A}), -- активация RPDM
         piemenu_act = false, --piemenu
         piemenu_keys = encodeJson({0x58}), -- активация piemenu
         fastrun_act = false, --быстрый бег
@@ -579,7 +576,7 @@ local mainIni = inicfg.load({
         returnmessageforvr = false, -- переотправка сообщения /vr если там ошибка с 1 сек
         enable_autofill = true, -- автоввод сохраненного текста в диалоги
         fisheye = false, -- рыбий глаз
-        fisheye_rad = 101, -- радиус глаза
+        fisheye_rad = 90, -- радиус глаза
         newmarkercolor = false, -- новый цвет маркера
         newmarkercolor_rainbow = false, -- маркер: режим затухания
         fromSecToMinInDemoran = false, -- форматирование времени в деморгане из "x SEC." в "x SEC. = x MIN."
@@ -596,7 +593,6 @@ local mainIni = inicfg.load({
         bhop = false, -- bunnyhop
         antiblockplayer = false, -- легко выйти из чела в больке
         whokillme = false, -- кто убил меня
-        separatormoney = false, -- разделение денег точками
 	},
 	info = {
 		date = '0',
@@ -644,7 +640,7 @@ local mainIni = inicfg.load({
         admin_report = false,
         distvoda = false,
         obnovlen = false,
-        taxes = false,
+        luxury = false,
         military_base = false,
         pin_code = false
     },
@@ -704,19 +700,9 @@ local sms_vr_prem				= 	imgui.ImBuffer(u8(tostring(mainIni.config.sms_vr_prem)),
 local time_act 					= 	imgui.ImBool(mainIni.config.time_act)
 local time_text 				= 	imgui.ImBuffer(u8(tostring(mainIni.config.time_text)),256)
 
-local message_catch_state 		=	imgui.ImBool(mainIni.config.message_catch_state)
-local message_catch				=	imgui.ImBuffer(u8(tostring(mainIni.config.message_catch)),256)
-
-local fam_messages 				= 	imgui.ImBool(mainIni.config.fam_messages)
-local fam_invite				= 	imgui.ImBuffer(u8(tostring(mainIni.config.fam_invite)),256)
-local fam_lvlup					= 	imgui.ImBuffer(u8(tostring(mainIni.config.fam_lvlup)),256)
 
 local accent_state				=	imgui.ImBool(mainIni.config.accent_state)
 local accent_text				= 	imgui.ImBuffer(u8(tostring(mainIni.config.accent_text)),256)
-
-local rpdm_act					=	imgui.ImBool(mainIni.config.rpdm_act)
-local rpdm_text 				= 	imgui.ImBuffer(u8(tostring(mainIni.config.rpdm_text)),256)
-local rpdm_keys					= 	imgui.ImHotKey(decodeJson(mainIni.config.rpdm_keys))
 
 local piemenu_act				=	imgui.ImBool(mainIni.config.piemenu_act)
 local piemenu_keys				=	imgui.ImHotKey(decodeJson(mainIni.config.piemenu_keys))
@@ -784,7 +770,6 @@ local bhop						=	imgui.ImBool(mainIni.config.bhop)
 local antiblockplayer			=	imgui.ImBool(mainIni.config.antiblockplayer)
 
 local whokillme					=	imgui.ImBool(mainIni.config.whokillme)
-local separatormoney			=	imgui.ImBool(mainIni.config.separatormoney)
 
 --автоеда, секция [eat]
 local checkmethod				= 	imgui.ImInt(mainIni.eat.checkmethod)
@@ -824,7 +809,7 @@ local tradedialog 				=	imgui.ImBool(mainIni.skipdialogs.tradedialog)
 local admin_report 				=	imgui.ImBool(mainIni.skipdialogs.admin_report)		
 local distvoda 					=	imgui.ImBool(mainIni.skipdialogs.distvoda)
 local obnovlen 					=	imgui.ImBool(mainIni.skipdialogs.obnovlen)
-local taxes 					=	imgui.ImBool(mainIni.skipdialogs.taxes)
+local luxury 					=	imgui.ImBool(mainIni.skipdialogs.luxury)
 local military_base				=	imgui.ImBool(mainIni.skipdialogs.military_base)
 local pin_code 					=	imgui.ImBool(mainIni.skipdialogs.pin_code)
 
@@ -1688,24 +1673,6 @@ function main()
 			arzmessage('Вы сейчас не ожидаете реконнекта!')
 		end
 	end)
-	sampRegisterChatCommand('cloadstop', function() 
-		if carloadnumber ~= -1 then
-			arzmessage('Стопаем загрузку авто №'..carloadnumber)
-			carloadnumber = -1
-		else
-			arzmessage('Авто не загружается! Начать загрузку: /cload')
-		end
-	end)
-	sampRegisterChatCommand("cload", function(carnum) 
-		carnum = tonumber(carnum)
-		if carnum and carnum >= 1 and carnum <= 20 then 
-			arzmessage('Загружаю авто №'..carnum..'\nТак-же вы можете остановить загрузку командой /cloadstop')
-			carloadnumber = carnum
-			sampSendChat('/cars')
-		else
-			arzmessage('Введите /cload [номер авто(от 1 до 20)]')
-		end
-	end)
 	sampRegisterChatCommand('aeat', function()
         sampSendClickTextdraw(arztextdrawid.v)
     end)
@@ -1800,6 +1767,8 @@ function main()
             sampSendChat('/findibiz '..arg)
         end
 	end)
+	sampRegisterChatCommand("st", SetTime)
+	sampRegisterChatCommand("sw", SetWeather)
 	lua_thread.create(vkget)
 	lua_thread.create(get_telegram_updates)
 	while true do
@@ -1820,36 +1789,6 @@ function main()
 			if piemenu_act.v and not sampIsCursorActive() then
 				piemenu.v = not piemenu.v
 			end	
-		end
-		if isKeysDown(rpdm_keys.v) then
-			local valid, ped = getCharPlayerIsTargeting(PLAYER_HANDLE)
-			local result, id = sampGetPlayerIdByCharHandle(ped)
-			local myweap = getCurrentCharWeapon(playerPed)
-			if rpdm_act.v and valid and doesCharExist(ped) then
-				if result then
-					local tgname = sampGetPlayerNickname(id)
-					if myweap == 24 then
-						sampSendChat('/me достал из-за пояса заряженый Desert Eagle')
-						wait(1200)
-						sampSendChat(u8:decode('/do '..rpdm_text.v..' '..tgname))
-					end
-					if myweap == 25 then
-						sampSendChat('/me достал из-за спины дробовик')
-						wait(1200)
-						sampSendChat(u8:decode('/do '..rpdm_text.v..' '..tgname))
-					end
-					if myweap == 31 then
-						sampSendChat('/me достал из-за спины M4')
-						wait(1200)
-						sampSendChat(u8:decode('/do '..rpdm_text.v..' '..tgname))
-					end
-					if myweap == 33 then
-						sampSendChat('/me достал из-за спины винтовку')
-						wait(1200)
-						sampSendChat(u8:decode('/do '..rpdm_text.v..' '..tgname))
-					end
-				end
-			end
 		end
 		if doesFileExist('moonloader/ARZ Assistant/fontawesome-webfont.ttf') then
 			imgui.Process = main_window_state.v or piemenu.v or show_window.v
@@ -2460,7 +2399,7 @@ function inputChat()
 		end
 	end
 end
---imgui сила твоя мать пидрила 
+--imgui
 function imgui.RenderMenuItems()
 	imgui.SetCursorPos(imgui.ImVec2(80,10))
 	imgui.BeginGroup()
@@ -2468,6 +2407,10 @@ function imgui.RenderMenuItems()
 	if imgui.Button(fa.ICON_COG..u8(' Настройки'),bsz) then
 		ShowListId = 1
 	end
+	imgui.SameLine()
+	--if imgui.Button(fa.ICON_BULLHORN..u8(' Открытие сундуков'),bsz) then
+	--	ShowListId = 7
+	--end	
 	imgui.SameLine()
 	if imgui.Button(fa.ICON_BULLHORN..u8(' Уведомления'),bsz) then
 		ShowListId = 2
@@ -3390,19 +3333,12 @@ end
 function setselements()
 	otherelements()
 	autoeatelements()
-	--timenweatherelements() 
-	vipelements()
-	lovlyaelements()
 	assistantelements()
-	famelements()
 	autorecelements()
 	piarelements()
 	autoelements()
 	timeelements()
-	-- checkerelements()
 	skipdialogselements()
-	reconelements()
-	rpdmelements()
 end
 function otherelements()
 	imgui.Separator()
@@ -3646,7 +3582,7 @@ function otherelements()
 	if imgui.Checkbox(u8('AntiLomka'),antilomka) then mainIni.config.antilomka = antilomka.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Убирает надпись в чате и камера не шатается'))
 	if imgui.Checkbox(u8('Кто меня убил?'),whokillme) then mainIni.config.whokillme = whokillme.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Если вас убъют, появится уведомление о человеке, который вас убил'))
 	if imgui.Checkbox(u8('Реконнект после рестарта?'),auto_rec_restart) then mainIni.config.auto_rec_restart = auto_rec_restart.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Срабатывает реконнект через 10 минут после тех. рестарта(В 5:00 по МСК)'))
-	if imgui.Checkbox(u8('Разделение денег'),separatormoney) then mainIni.config.separatormoney = separatormoney.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Разделяет деньги точками'))
+	--if imgui.Checkbox(u8('Разделение денег'),separatormoney) then mainIni.config.separatormoney = separatormoney.v saveIniFile() end imgui.SameLine() imgui.TextQuestion(u8('Разделяет деньги точками'))
 	imgui.EndGroup()
 end	
 function autoelements()
@@ -3753,28 +3689,6 @@ function piarelements()
 	imgui.TextQuestion(u8'Задержка отправки сообщений пиара. Выставлять в секундах.')
 	imgui.EndGroup()
 end
-function lovlyaelements()
-	imgui.Separator()
-	imgui.CenterText(u8'Ловля')
-	imgui.Separator()
-	imgui.CreatePaddingX(10)
-	imgui.BeginGroup()
-	if imgui.Checkbox(u8'Сообщение после ловли', message_catch_state) then
-		mainIni.config.message_catch_state = message_catch_state.v
-		saveIniFile()
-	end
-	imgui.SameLine()
-	imgui.TextQuestion(u8'Когда вы словите дом/авто/бизнес в чат отправится сообщение, которое вы установили ниже.')
-	if message_catch_state.v then
-		if imgui.InputText(u8('Сообщение'), message_catch) then
-			mainIni.config.message_catch = u8:decode(message_catch.v)
-			saveIniFile()
-		end
-		imgui.SameLine()
-		imgui.TextQuestion(u8'Введите текст который будет писать скрипт после ловли дома/авто.')
-	end
-	imgui.EndGroup()	
-end
 function timeelements()
 	imgui.Separator()
 	imgui.CenterText(u8('Часы'))
@@ -3855,33 +3769,6 @@ function assistantelements()
 	end
 	imgui.EndGroup()
 end
-function famelements()
-	imgui.Separator()
-	imgui.CenterText(u8'Семейный чат')
-	imgui.Separator()
-	imgui.CreatePaddingX(10)
-	imgui.BeginGroup()
-	if imgui.Checkbox(u8'Включить автосообщения для /fam',fam_messages) then
-		mainIni.config.fam_messages = fam_messages.v
-		saveIniFile()
-	end
-	imgui.SameLine()
-	imgui.TextQuestion(u8'Если в фаму инвайтнут игрока, отправится сообщение ниже. Так-же, если игрок достигнет определённого лвла')
-	if fam_messages.v then
-		imgui.PushItemWidth(200)
-		if imgui.InputText(u8'Инвайт',fam_invite) then
-			mainIni.config.fam_invite = u8:decode(fam_invite.v)
-			saveIniFile()
-		end
-		imgui.SameLine()
-		if imgui.InputText(u8'Поздравление',fam_lvlup) then
-			mainIni.config.fam_lvlup = u8:decode(fam_lvlup.v)
-			saveIniFile()
-		end
-		imgui.PopItemWidth()
-	end
-	imgui.EndGroup()
-end
 function autorecelements()
 	imgui.Separator()
 	imgui.CenterText(u8'Autoreconnect')
@@ -3906,70 +3793,6 @@ function autorecelements()
 			saveIniFile()
 		end
 		imgui.PopItemWidth()
-	end
-	imgui.EndGroup()
-end
-function rpdmelements()
-	imgui.Separator()
-	imgui.CenterText('RPDM')
-	imgui.SameLine()
-	imgui.TextQuestion(u8'Реализация клео от Black Jezus(pidorasa) в виде функции в скрипте с возможностью сменить отыгровку. Активация: ПКМ + '..table.concat(getKeysName(rpdm_keys.v), " + "))
-	imgui.Separator()
-	imgui.CreatePaddingX(10)
-	imgui.BeginGroup()
-
-	imgui.Text(u8'Включить: ')
-	imgui.SameLine()
-	if imadd.ToggleButton('##onoffodaq', rpdm_act) then
-		mainIni.config.rpdm_act = rpdm_act.v
-		saveIniFile()
-	end
-	if rpdm_act.v then
-		imgui.Text(u8'Активация: ')
-		imgui.SameLine()
-		if imadd.HotKey("##active2", rpdm_keys, {}, 120) then
-			mainIni.config.rpdm_keys = encodeJson(rpdm_keys.v)
-			saveIniFile()
-		end
-		imgui.SameLine()
-		imgui.Text(u8('+ ПКМ'))
-		
-		imgui.PushItemWidth(200)
-		if imgui.InputText(u8"Отыгровка RPDM'a",rpdm_text) then
-			mainIni.config.rpdm_text = u8:decode(rpdm_text.v)
-			saveIniFile()
-		end
-		imgui.PopItemWidth()
-		
-		imgui.SameLine()
-
-		imgui.CreatePaddingX(20)
-		imgui.TextColoredRGB(u8'{4682b4}'..u8:decode(rpdm_text.v)..' '..'Ronny_Wright[1001] - | '..myname..'['..myid..']')
-	end
-	imgui.EndGroup()	
-end
-function reconelements()
-	imgui.Separator()
-	imgui.CenterText(u8'Reconnect')
-	imgui.SameLine()
-	imgui.TextQuestion(u8'Обычный реконнект, так-же можно использовать через команды /rc и /rcn. Подробнее в вкладке "Информация"')
-	imgui.Separator()
-	imgui.CreatePaddingX(10)
-	imgui.BeginGroup()
-	
-	imgui.PushItemWidth(120)
-	if recstand.v < 0 then recstand.v = 0 end
-	imgui.InputInt(u8'Обычный реконнект',recstand)
-	imgui.InputText(u8'Реконнект с сменой ника',recname)
-	imgui.PopItemWidth()
-	imgui.EndGroup()
-	imgui.SameLine()
-	imgui.BeginGroup()
-	if imgui.Button(u8'Recon##1',imgui.ImVec2(50,20)) then
-		reconstandart(recstand.v)
-	end
-	if imgui.Button(u8'Recon##2',imgui.ImVec2(50,20)) then
-		reconname(recname.v)
 	end
 	imgui.EndGroup()
 end
@@ -3998,8 +3821,8 @@ function skipdialogselements()
 			mainIni.skipdialogs.obnovlen = obnovlen.v
 			saveIniFile()
 		end
-		if imgui.Checkbox(u8'Скипать диалог налоговой',taxes) then
-			mainIni.skipdialogs.taxes = taxes.v
+		if imgui.Checkbox(u8'Скипать диалог покупки concept car(автопокупка)',luxury) then
+			mainIni.skipdialogs.luxury = luxury.v
 			saveIniFile()
 		end
 		if imgui.Checkbox(u8'Скипать диалог про квест "Грабим военную базу"',military_base) then
@@ -4021,8 +3844,6 @@ end
 function arzwindelements()
 	local ppos = imgui.GetWindowPos()
 	imgui.SetWindowFontScale(0.835)
-	imgui.CenterText('ARZ Assistant')
-	imgui.Separator()
 	_, myid = sampGetPlayerIdByCharHandle(playerPed)
 	myname = sampGetPlayerNickname(myid)
 	myping = sampGetPlayerPing(myid)
@@ -4154,7 +3975,6 @@ tblclose = {}
 sendcloseinventory = function()
 	sampSendClickTextdraw(tblclose[1])
 end
-
 -- хук на показ текстдрава
 function sampev.onShowTextDraw(id,data)
 	for w, q in pairs(tblclosetest) do
@@ -4233,11 +4053,11 @@ function sampev.onDisplayGameText(style, time, text)
 	end	
 	if auto_fill_gas.v then
 		if text == '~w~This type of fuel ~r~ is not suitable~w~~n~ for your vehicles!' then
-			sampSendClickTextdraw(130)
+			sampSendClickTextdraw(152)
 		end
 		if text == '~w~' then
 			sampSendClickTextdraw(2064)
-			sampSendClickTextdraw(144)
+			sampSendClickTextdraw(166)
 		end
 	end
 	if text == ('You are hungry!') or text == ('~r~You are very hungry!') then
@@ -4257,7 +4077,6 @@ function sampev.onServerMessage(_,text)
 		return false
 	end
 end
-
 -- хук на показ диалога
 function sampev.onShowDialog(dialogId, dialogStyle, dialogTitle, okButtonText, cancelButtonText, dialogText)
 	if dialogStyle == 1 or dialogStyle == 3 then
@@ -4416,10 +4235,13 @@ function sampev.onShowDialog(dialogId, dialogStyle, dialogTitle, okButtonText, c
 				end)
 			end
 		end
-		if taxes.v then
-			if dialogTitle == '{BFBBBA}Налоговая' then
-				sampSendDialogResponse(id,0,0,'')
-				return false
+		if luxury.v then
+			if dialogText:find('происходит в каждый PayDay по 10 штук') then
+		    	lua_thread.create(function()
+		    		wait(0)
+					sampSendDialogResponse(sampGetCurrentDialogId(), 0, -1, -1)
+					closeDialog()
+				end)
 			end
 		end
 		if military_base.v then
@@ -4520,26 +4342,6 @@ function sampev.onServerMessage(color, text)
 	end
 	aok, maid = sampGetPlayerIdByCharHandle(playerPed)
 	name = sampGetPlayerNickname(maid)
-	if fam_messages.v and color == -1178486529 then
-		if text:find('пригласил') and text:find('в семью') and text:find('[Семья (Новости)]') and string.find(text,'Семья',1)then
-			sampSendChat(u8:decode('/fam '..fam_invite.v))
-			sampAddChatMessage(text,color)
-		end
-		if text:find('Член семьи:') and text:find('достиг') and string.find(text,'[Новости Семьи]',1) and not text:find('Семья')  then
-			sampSendChat(u8:decode('/fam '..fam_lvlup.v))
-			sampAddChatMessage(text,color)
-		end
-	end
-	if send_sms_if_vip.v then
-		if text:find('Игрок (.-) приобрел Titan VIP.') and text:find('%[Информация%]') and color == -10270721 then
-			sampSendChat(u8:decode('/vr '..sms_vr_vip.v))
-			sampAddChatMessage(text,color)
-		end
-		if text:find('Игрок (.-) приобрел PREMIUM VIP.') and text:find('%[Информация%]') and color == -10270721 then
-		   sampSendChat(u8:decode('/vr '..sms_vr_prem.v))
-		   sampAddChatMessage(text,color)
-		end
-	end
 	if text:find('Вы надели бронежилет.') then
 		if armour_info.v then
 			timekd = os.time()
@@ -4619,7 +4421,7 @@ function sampev.onServerMessage(color, text)
 		sendnotification(text)
 	end
 	if returnmessageforvr.v then
-		if text:find('После последнего сообщения в этом чате нужно подождать 1 секунду') and color == -10270721 then
+		if text:find('После последнего сообщения в этом чате нужно подождать 3 секунды') and color == -10270721 then
 			sampAddChatMessage("[ReSend /vr]{ffffff} Переотправляю...",-10270721)
 			lua_thread.create(function() 
 				wait(1000)
@@ -4627,17 +4429,6 @@ function sampev.onServerMessage(color, text)
 			end)
 		end
 	end
-	if message_catch_state.v then	
-		if text:find("%{73B461%}Поздравляем! Теперь этот транспорт принадлежит вам!") then
-			sampSendChat(u8:decode(message_catch.v))
-		end	
-		if text:find("%[Информация%] %{FFFFFF%}Поздравляю! Теперь этот дом ваш!") and not text:find('говорит') and not text:find('- |') then
-			sampSendChat(u8:decode(message_catch.v))
-		end
-		if text:find("%[Информация%] %{FFFFFF%}Поздравляю! Теперь этот бизнес ваш!") and not text:find('говорит') and not text:find('- |') then
-			sampSendChat(u8:decode(message_catch.v))
-		end
-	end	
 end
 
 -- Author: http://qrlk.me/samp, edit ronnysoftware
