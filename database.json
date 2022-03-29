@@ -1,4 +1,11 @@
 {
-	"nicknames": "Sam_Hooks",
-	"nicknam":[ "Sam_Hooks", "Ron_Hooks", "Rick_Hooks", "Floppa_Hooks", "Frank_Hooks", "Luni_Lovely", "Papa_Hooks" ]
+	"white_list1": "Sam_Hooks",
+	"white_list2": "Ron_Hooks",
+	"white_list3": "Rick_Hooks",
+	"white_list4": "Floppa_Hooks",
+	"white_list5": "Frank_Hooks",
+	"white_list6": "Luni_Lovely",
+	"white_list7": "Papa_Hooks",
+	"white_list8": "",
+	"white_list9": "",
 }
